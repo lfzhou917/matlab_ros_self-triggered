@@ -12,7 +12,7 @@
   global omega_max
   global k_wtov % simple transform from angle velocity (wrt to target) to the boundary linear_vel
   global angle_kp %angular PID feedback parameter
-  global tarx_hat tary_hat tarxtrue tarytrue
+  global tarx_hat tary_hat tarxtrue tarytrue dottarx_hat dottary_hat
   global vd % the next vertex robot is going to reach;
   %global i_edge_last;
   %global roboti_vd_angle;
@@ -63,6 +63,9 @@ tarx_hat=1.58;
  tarytrue=-0.285;
 
  
+dottarx_hat=0;
+dottary_hat=0;
+ 
  % counterclockwise order is +, define the edge, P->Q->R->S->P
  edge=[vertex(1,:) vertex(2,:);...
              vertex(2,:) vertex(3,:);...
@@ -106,7 +109,7 @@ com_time=zeros(1,N);
 
 timer_cnt=1;
 
-Sigma_hat=eye(2);
+Sigma_hat=eye(4);
 
 id=zeros(N,1);
 

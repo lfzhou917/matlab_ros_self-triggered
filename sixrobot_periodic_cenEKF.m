@@ -1,7 +1,7 @@
 function sixrobot_periodic_cenEKF(~,~)
 
 
-global N omega_max tarx_hat tary_hat tarxtrue tarytrue i_store...
+global N omega_max tarx_hat tary_hat dottarx_hat dottary_hat tarxtrue tarytrue i_store...
     iself_count self_tolerance gVimid id Sigma_hat timer_cnt ave_com ave_err tar_err std_err T com_time...
     robot_pub_vel robot_pub_msg target_pub_vel target_pub_msg...
       posesub_0 posesub_1 posesub_2 posesub_3 posesub_4 posesub_5
@@ -78,7 +78,7 @@ robot_itheta_real=[robot0_theta_real;robot1_theta_real;robot2_theta_real;robot3_
 robot_itheta=orderlythetafun(robot_itheta);
 robot_itheta_real=orderlythetafun(robot_itheta_real);
 
-[robot_itheta(4)-robot_itheta(3),robot_itheta(3)-robot_itheta(2),robot_itheta(2)-robot_itheta(1)]
+%[robot_itheta(4)-robot_itheta(3),robot_itheta(3)-robot_itheta(2),robot_itheta(2)-robot_itheta(1)]
 
 
 %collect the data in compact form
@@ -90,9 +90,9 @@ for i=1:N
      id(i)=i;
 end
 
-%%transform the centralized EKF to self-triggered
- [tarx_hat, tary_hat, Sigma_hat] = KF_pioneer (...
- tarx_hat, tary_hat, Sigma_hat, robot_pose_px, robot_pose_py,id, timer_cnt);
+%%transform the centralized EKF to self-triggered%KF_pioneer
+ [tarx_hat, tary_hat, dottarx_hat, dottary_hat, Sigma_hat] = KF_pv (...
+ tarx_hat, tary_hat, dottarx_hat, dottary_hat, Sigma_hat, robot_pose_px, robot_pose_py,id, timer_cnt);
  tar_err(timer_cnt)=sqrt((tarx_hat-tarxtrue)^2+(tary_hat-tarytrue)^2);
         
         %calculate the dirsed angular orientation next step

@@ -1,5 +1,5 @@
-function [x_hat_tplus1, y_hat_tplus1, Sigma_hat_tplus1] = KF_pv (...
-    x_hat_t, y_hat_t, Sigma_hat_t, Xr, Yr, ID, t)
+function [x_hat_tplus1, y_hat_tplus1, dotx_hat_tplus1, doty_hat_tplus1, Sigma_hat_tplus1] = KF_pv (...
+    x_hat_t, y_hat_t, dotx_hat_t, doty_hat_t, Sigma_hat_t, Xr, Yr, ID, t)
 
 global posesub_tar tarxtrue tarytrue T target_pub_msg
 
@@ -58,7 +58,7 @@ end
 % User-defined parameters:
 %   Q: 2x2 state noise covariance
 
-Q = 0.2*eye(2);
+Q = 0.2*eye(4);
 
 % the velocity of the target. 
 %x=x0+r*cos(\omega*t)
@@ -66,15 +66,16 @@ Q = 0.2*eye(2);
 % r=v/\omega (v=target_pub_msg.Linear.X, omega=target_pub_msg.Angular.Z)
 % v_x=-r*\omega*sin(\omega*t)=-v*sin(\omega*t)
 % v_y=r*\omega*cos(\omega*t)=v*cos(\omega*t)
-dotx=- target_pub_msg.Linear.X*sin(target_pub_msg.Angular.Z*(t-1)*T);%%
-doty= target_pub_msg.Linear.X*cos(target_pub_msg.Angular.Z*(t-1)*T);%% t is not correct.
+%dotx=- target_pub_msg.Linear.X*sin(target_pub_msg.Angular.Z*(t-1)*T);%%
+%doty= target_pub_msg.Linear.X*cos(target_pub_msg.Angular.Z*(t-1)*T);%% t is not correct.
 
-X_hat_t = [x_hat_t; y_hat_t; dotx; doty];   % make matrices
+X_hat_t = [x_hat_t; y_hat_t; dotx_hat_t; doty_hat_t];   % make matrices
 
 A=[1 0 T 0; 0 1 0 T; 0 0 1 0; 0 0 0 1];
 
 X_hat_tplus1_minus = A*X_hat_t;
 Sigma_hat_tplus1_minus = Sigma_hat_t + Q;
+
 
 %h = [h; covarianceEllipse(X_hat_tplus1_minus,Sigma_hat_tplus1_minus,[0 0 1]),11.82];
 
@@ -85,7 +86,7 @@ Sigma_hat_tplus1_minus = Sigma_hat_t + Q;
 
 for i = 1 : length(Xr)
     z_hat(i) = norm([X_hat_tplus1_minus(1);X_hat_tplus1_minus(2)] - [Xr(i); Yr(i)]);
-    H(i,:) = -1/z_hat(i) * ([Xr(i); Yr(i)]-[X_hat_tplus1_minus(1);X_hat_tplus1_minus(2)])';
+    H(i,:) = -1/z_hat(i) * ([Xr(i); Yr(i); 0; 0]-X_hat_tplus1_minus)'; %%%%%%undone
 end
 
 % residual
@@ -101,12 +102,16 @@ S = H*Sigma_hat_tplus1_minus*H' + R;
 K = Sigma_hat_tplus1_minus * H' * inv(S);
 
 % state update
-X_hat_tplus1 = [X_hat_tplus1_minus(1);X_hat_tplus1_minus(2)] + K*res;
+X_hat_tplus1 = X_hat_tplus1_minus + K*res;
 
 % covariance update (Joseph Form for numerical stability)
-Sigma_hat_tplus1 = (eye(2)-K*H)*Sigma_hat_tplus1_minus*(eye(2)-K*H)' + K*R*K';
+Sigma_hat_tplus1 = (eye(4)-K*H)*Sigma_hat_tplus1_minus*(eye(4)-K*H)' + K*R*K';
 
 x_hat_tplus1 = X_hat_tplus1(1);
 y_hat_tplus1 = X_hat_tplus1(2);
+dotx_hat_tplus1=X_hat_tplus1(3);
+doty_hat_tplus1=X_hat_tplus1(4);
+
+X_hat_tplus1
 
 end
